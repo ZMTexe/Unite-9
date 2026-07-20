@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unite Nine — Web Design & Création de sites</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0b14;
+    --bg-alt:#0d0e1c;
+    --surface: rgba(255,255,255,0.035);
+    --surface-strong: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.10);
+    --border-soft: rgba(255,255,255,0.06);
+    --text:#f2f2f8;
+    --text-muted:#8c8ea8;
+    --text-dim:#5c5e74;
+    --accent-1:#5b5ff5;
+    --accent-2:#9b5cff;
+    --grad: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    --radius: 20px;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    overflow-x:hidden;
+    cursor:none;
+  }
+  body.loading{overflow:hidden; height:100vh;}
+  ::selection{background:var(--accent-1);color:#fff;}
+
+  /* LOADER — curtain reveal */
+  .loader{
+    position:fixed; inset:0; z-index:10000; pointer-events:none;
+    display:flex;
+  }
+  .loader-half{
+    position:absolute; top:0; height:100%; width:50%;
+    transition: transform 1.05s cubic-bezier(.76,0,.24,1);
+  }
+  .loader-left{ left:0; background:var(--bg-alt); transform:translateX(-100%); }
+  .loader-right{ right:0; background:linear-gradient(135deg, var(--accent-1), var(--accent-2)); transform:translateX(100%); }
+  .loader.meet .loader-left{ transform:translateX(0); }
+  .loader.meet .loader-right{ transform:translateX(0); }
+  .loader.part .loader-left{ transform:translateX(-100%); }
+  .loader.part .loader-right{ transform:translateX(100%); }
+  .loader-mark{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) scale(0.7);
+    font-family:'Space Grotesk'; font-weight:600; font-size:15px; letter-spacing:0.3em;
+    color:#fff; opacity:0; transition:opacity .4s ease, transform .4s ease; z-index:2;
+  }
+  .loader.meet .loader-mark{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+  .loader.hide{ display:none; }
+
+
+  .noise{
+    position:fixed; inset:0; z-index:1; pointer-events:none;
+    opacity:0.035; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Custom cursor */
+  #cursor-dot, #cursor-ring{
+    position:fixed; top:0; left:0; pointer-events:none; z-index:9999;
+    border-radius:50%; transform:translate(-50%,-50%);
+  }
+  #cursor-dot{ width:6px; height:6px; background:#fff; }
+  #cursor-ring{
+    width:34px; height:34px; border:1px solid rgba(155,92,255,0.6);
+    background:rgba(91,95,245,0.06); transition:width .25s,height .25s,border-color .25s,background .25s;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #cursor-ring.hover{
+    width:58px; height:58px; border-color:var(--accent-2);
+    background:rgba(155,92,255,0.12);
+  }
+  #cursor-ring span{
+    font-family:'IBM Plex Mono'; font-size:9.5px; letter-spacing:0.06em; color:#fff;
+    opacity:0; transition:opacity .2s; white-space:nowrap; text-transform:uppercase;
+  }
+  #cursor-ring.hover.has-label{width:auto; height:auto; padding:9px 16px; border-radius:999px;}
+  #cursor-ring.hover.has-label span{opacity:1;}
+  @media (max-width:900px){
+    body{cursor:auto;}
+    #cursor-dot,#cursor-ring{display:none;}
+  }
+
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 32px;}
+  section{position:relative; z-index:2;}
+
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--accent-2); display:flex; align-items:center; gap:10px; margin-bottom:18px;
+  }
+  .eyebrow::before{
+    content:''; width:16px; height:1px; background:var(--grad);
+  }
+
+  h1,h2,h3{font-family:'Space Grotesk', sans-serif; line-height:1.05; letter-spacing:-0.01em;}
+
+  /* NAV */
+  header{
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 32px;
+    backdrop-filter:blur(16px);
+    background:rgba(10,11,20,0.55);
+    border-bottom:1px solid var(--border-soft);
+  }
+  .logo-plaque{
+    display:flex; align-items:center; gap:10px;
+  }
+  .logo-plaque img{
+    height:34px; background:#f4f4f8; border-radius:9px; padding:5px 8px;
+    display:block;
+  }
+  nav{display:flex; align-items:center; gap:36px;}
+  nav a{font-size:14.5px; color:var(--text-muted); transition:color .2s; position:relative;}
+  nav a:hover{color:var(--text);}
+  .nav-links{display:flex; gap:32px;}
+  .cta-btn{
+    font-family:'Inter'; font-size:14px; font-weight:600; color:#fff;
+    padding:11px 22px; border-radius:999px; background:var(--grad);
+    box-shadow:0 0 0 1px rgba(255,255,255,0.08) inset;
+    transition:transform .25s, box-shadow .25s;
+  }
+  .cta-btn:hover{transform:translateY(-2px); box-shadow:0 8px 24px -6px rgba(91,95,245,0.6);}
+  .burger{display:none;}
+  @media (max-width:820px){
+    .nav-links{display:none;}
+    .cta-btn{display:none;}
+  }
+
+  /* HERO */
+  .hero{
+    min-height:100vh; display:flex; flex-direction:column; justify-content:center;
+    position:relative; padding-top:100px; overflow:hidden;
+  }
+  #network-canvas{
+    position:absolute; inset:0; z-index:0; opacity:0.85;
+  }
+  .hero-content{position:relative; z-index:2;}
+  .hero h1{
+    font-size:clamp(40px, 7vw, 84px); font-weight:600; max-width:900px;
+  }
+  .hero h1 .grad{
+    background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .hero p.lede{
+    font-size:18px; color:var(--text-muted); max-width:520px; margin-top:26px; line-height:1.6;
+  }
+  .hero-actions{display:flex; gap:18px; margin-top:42px; align-items:center;}
+  .magnetic{ display:inline-block; transition:transform .18s ease-out; will-change:transform; }
+  .hero h1{ min-height:1.15em; }
+  .hero h1 .char{ display:inline-block; }
+  .btn-ghost{
+    font-size:14.5px; font-weight:500; color:var(--text); padding:13px 26px;
+    border:1px solid var(--border); border-radius:999px; transition:border-color .2s, background .2s;
+  }
+  .btn-ghost:hover{border-color:var(--accent-2); background:var(--surface);}
+  .btn-primary{
+    font-size:14.5px; font-weight:600; color:#fff; padding:14px 30px;
+    border-radius:999px; background:var(--grad);
+    box-shadow:0 0 0 1px rgba(255,255,255,0.08) inset;
+    transition:transform .25s, box-shadow .25s;
+  }
+  .btn-primary:hover{transform:translateY(-2px); box-shadow:0 10px 30px -8px rgba(91,95,245,0.65);}
+
+  .scroll-hint{
+    position:absolute; bottom:36px; left:32px; display:flex; align-items:center; gap:10px;
+    font-family:'IBM Plex Mono'; font-size:11.5px; color:var(--text-dim); letter-spacing:0.1em;
+  }
+  .scroll-hint .line{width:1px; height:36px; background:linear-gradient(var(--accent-2), transparent); animation:scrollline 2s ease-in-out infinite;}
+  @keyframes scrollline{0%,100%{opacity:.2;} 50%{opacity:1;}}
+
+  /* reveal */
+  .reveal{opacity:0; transform:translateY(28px); transition:opacity .7s ease, transform .7s ease;}
+  .reveal.in{opacity:1; transform:translateY(0);}
+
+  /* SEAM — recurring "unite" divider motif */
+  .seam{display:flex; align-items:center; justify-content:center; padding:64px 0; position:relative; z-index:2;}
+  .seam-half{
+    height:1px; flex:1; max-width:340px;
+    background:linear-gradient(to right, transparent, var(--border));
+    transform:scaleX(0); transition:transform 1s cubic-bezier(.16,1,.3,1);
+  }
+  .seam-half.right{ transform-origin:left; background:linear-gradient(to left, transparent, var(--border)); }
+  .seam-half.left{ transform-origin:right; }
+  .seam.in .seam-half{ transform:scaleX(1); }
+  .seam-core{
+    font-family:'IBM Plex Mono'; font-size:11px; letter-spacing:0.35em;
+    color:var(--text-dim); padding:0 22px; white-space:nowrap; position:relative;
+  }
+  .seam-core::before{
+    content:''; position:absolute; left:50%; top:50%; width:6px; height:6px;
+    background:var(--grad); border-radius:50%; transform:translate(-50%,-50%);
+    box-shadow:0 0 18px 4px rgba(155,92,255,0.55); opacity:0; transition:opacity .6s .7s;
+  }
+  .seam.in .seam-core::before{ opacity:1; }
+
+  /* MARQUEE */
+  .marquee-wrap{
+    position:relative; z-index:2; overflow:hidden;
+    border-top:1px solid var(--border-soft); border-bottom:1px solid var(--border-soft);
+    background:var(--bg-alt); padding:14px 0; display:flex; flex-direction:column; gap:10px;
+  }
+  .marquee-track{
+    display:flex; white-space:nowrap; width:max-content;
+    animation:marquee 26s linear infinite;
+    font-family:'IBM Plex Mono'; font-size:13px; letter-spacing:0.06em; color:var(--text-dim);
+  }
+  .marquee-track span{padding:0 10px;}
+  .marquee-track .dot{color:var(--accent-2);}
+  @keyframes marquee{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
+  .marquee-track.reverse{ animation:marquee-rev 30s linear infinite; color:var(--text-dim); opacity:0.6; }
+  @keyframes marquee-rev{ from{transform:translateX(-50%);} to{transform:translateX(0);} }
+
+  .service-code{
+    font-family:'IBM Plex Mono'; font-size:12px; letter-spacing:0.1em; color:var(--accent-2);
+    margin-bottom:16px; display:block;
+  }
+
+  /* APPROACH */
+  .approach{padding:150px 0 120px;}
+  .approach-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:0; position:relative;}
+  @media (max-width:900px){.approach-grid{grid-template-columns:1fr; gap:36px;}}
+  .approach-step{
+    padding:0 26px 0 0; position:relative; border-right:1px solid var(--border-soft);
+  }
+  .approach-grid .approach-step:last-child{border-right:none;}
+  @media (max-width:900px){.approach-step{border-right:none; padding:0; border-left:1px solid var(--border-soft); padding-left:24px;}}
+  .approach-num{
+    font-family:'Space Grotesk'; font-size:15px; color:var(--text-dim);
+    display:flex; align-items:center; gap:10px; margin-bottom:22px;
+  }
+  .approach-num::before{content:''; width:8px; height:8px; border-radius:50%; background:var(--grad);}
+  .approach-step h3{font-size:19px; font-weight:600; margin-bottom:12px;}
+  .approach-step p{color:var(--text-muted); font-size:14.5px; line-height:1.6;}
+
+  /* WHY */
+  .why{padding:40px 0 140px;}
+  .why-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:22px;}
+  @media (max-width:820px){.why-grid{grid-template-columns:1fr;}}
+  .why-card{padding:8px 4px;}
+  .why-card h3{font-size:19px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:12px;}
+  .why-card h3::before{content:''; width:26px; height:1px; background:var(--grad);}
+  .why-card p{color:var(--text-muted); font-size:14.5px; line-height:1.65;}
+
+  /* SERVICES */
+  .services{padding:150px 0 120px;}
+  .section-head{max-width:640px; margin-bottom:64px;}
+  .section-head h2{font-size:clamp(30px,4vw,46px); font-weight:600;}
+  .section-head p{color:var(--text-muted); margin-top:16px; font-size:16px; line-height:1.6;}
+
+  .service-grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:22px;
+  }
+  @media (max-width:760px){.service-grid{grid-template-columns:1fr;}}
+  .service-card{
+    background:var(--surface); border:1px solid var(--border-soft);
+    border-radius:var(--radius); padding:36px;
+    backdrop-filter:blur(10px);
+    transition:transform .35s ease, border-color .35s, background .35s;
+    transform-style:preserve-3d;
+    position:relative; overflow:hidden;
+  }
+  .service-card::before{
+    content:''; position:absolute; inset:0; opacity:0; transition:opacity .4s;
+    background:radial-gradient(400px circle at var(--mx,50%) var(--my,50%), rgba(155,92,255,0.14), transparent 60%);
+  }
+  .service-card:hover::before{opacity:1;}
+  .service-card:hover{border-color:rgba(155,92,255,0.35);}
+  .service-icon{
+    width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    background:var(--grad); margin-bottom:24px;
+  }
+  .service-icon svg{width:22px; height:22px; stroke:#fff; fill:none; stroke-width:1.8;}
+  .service-card h3{font-size:21px; font-weight:600; margin-bottom:10px;}
+  .service-card p{color:var(--text-muted); font-size:15px; line-height:1.65;}
+
+  /* PORTFOLIO — horizontal drag carousel */
+  .portfolio{padding:60px 0 40px;}
+  .port-drag-hint{
+    display:flex; align-items:center; gap:10px; margin-bottom:26px;
+    font-family:'IBM Plex Mono'; font-size:11.5px; letter-spacing:0.1em; color:var(--text-dim);
+  }
+  .port-drag-hint .arrow{display:inline-block; animation:driftx 1.6s ease-in-out infinite;}
+  @keyframes driftx{0%,100%{transform:translateX(0);} 50%{transform:translateX(6px);}}
+  .port-grid{
+    display:flex; gap:22px; overflow-x:auto; padding-bottom:10px; margin:0 -32px; padding-left:32px; padding-right:32px;
+    scroll-snap-type:x proximity; cursor:grab; scrollbar-width:none;
+  }
+  .port-grid.dragging{ cursor:grabbing; scroll-snap-type:none; }
+  .port-grid::-webkit-scrollbar{display:none;}
+  .port-card{
+    flex:0 0 320px; scroll-snap-align:start;
+    border-radius:var(--radius); overflow:hidden; border:1px solid var(--border-soft);
+    background:var(--bg-alt); transition:transform .4s ease, border-color .4s;
+  }
+  .port-card:hover{transform:translateY(-6px); border-color:rgba(155,92,255,0.3);}
+  .port-mock{
+    height:190px; position:relative; overflow:hidden;
+    background:linear-gradient(160deg, #14152a, #0a0b16);
+  }
+  .port-mock .bar{
+    height:26px; background:rgba(255,255,255,0.04); display:flex; align-items:center; gap:6px; padding:0 12px;
+    border-bottom:1px solid var(--border-soft);
+  }
+  .port-mock .bar span{width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,0.15);}
+  .port-mock .shape{
+    position:absolute; border-radius:16px; background:var(--grad); opacity:0.5; filter:blur(0.5px);
+  }
+  .port-body{padding:24px 26px 28px;}
+  .port-tag{
+    font-family:'IBM Plex Mono'; font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--accent-2); border:1px solid rgba(155,92,255,0.3); border-radius:999px;
+    padding:4px 10px; display:inline-block; margin-bottom:14px;
+  }
+  .port-body h3{font-size:18px; font-weight:600; margin-bottom:6px;}
+  .port-body p{color:var(--text-muted); font-size:14px;}
+
+  /* CONTACT */
+  .contact{padding:40px 0 140px;}
+  .contact-inner{
+    display:grid; grid-template-columns:1fr 1.1fr; gap:60px;
+    background:var(--surface); border:1px solid var(--border-soft);
+    border-radius:28px; padding:64px; backdrop-filter:blur(10px);
+  }
+  @media (max-width:900px){.contact-inner{grid-template-columns:1fr; padding:40px;}}
+  .contact-left h2{font-size:clamp(28px,4vw,40px); font-weight:600; margin-bottom:18px;}
+  .contact-left p{color:var(--text-muted); font-size:15.5px; line-height:1.6; margin-bottom:34px;}
+  .email-link{
+    font-family:'Space Grotesk'; font-size:clamp(20px,2.4vw,28px); font-weight:600;
+    display:inline-flex; align-items:center; gap:12px; color:var(--text);
+    border-bottom:1px solid var(--border); padding-bottom:10px; transition:color .25s, border-color .25s;
+  }
+  .email-link:hover{color:var(--accent-2); border-color:var(--accent-2);}
+  .contact-form{display:flex; flex-direction:column; gap:16px;}
+  .contact-form input, .contact-form textarea{
+    background:rgba(255,255,255,0.03); border:1px solid var(--border);
+    border-radius:12px; padding:14px 16px; color:var(--text); font-family:'Inter'; font-size:14.5px;
+    outline:none; transition:border-color .2s, background .2s;
+  }
+  .contact-form input:focus, .contact-form textarea:focus{border-color:var(--accent-2); background:rgba(255,255,255,0.05);}
+  .contact-form textarea{resize:vertical; min-height:110px;}
+  .contact-form label{font-size:12.5px; color:var(--text-dim); font-family:'IBM Plex Mono'; letter-spacing:0.05em;}
+  .contact-form .field{display:flex; flex-direction:column; gap:8px;}
+  .submit-btn{
+    margin-top:6px; align-self:flex-start; font-weight:600; font-size:14.5px; color:#fff;
+    padding:14px 30px; border:none; border-radius:999px; background:var(--grad); cursor:none;
+    transition:transform .25s, box-shadow .25s;
+  }
+  .submit-btn:hover{transform:translateY(-2px); box-shadow:0 10px 28px -8px rgba(91,95,245,0.6);}
+
+  footer{
+    padding:40px 0 36px; border-top:1px solid var(--border-soft);
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
+  }
+  footer .f-left{display:flex; align-items:center; gap:12px;}
+  footer .f-left img{height:24px; background:#f4f4f8; border-radius:6px; padding:3px 5px;}
+  footer p{color:var(--text-dim); font-size:13px; font-family:'IBM Plex Mono';}
+</style>
+</head>
+<body>
+
+<div class="loader" id="loader">
+  <div class="loader-half loader-left"></div>
+  <div class="loader-mark">09</div>
+  <div class="loader-half loader-right"></div>
+</div>
+
+<div class="noise"></div>
+<div id="cursor-dot"></div>
+<div id="cursor-ring"><span id="cursor-label"></span></div>
+
+<header>
+  <div class="logo-plaque">
+    <img src="logo.png" alt="Unite Nine">
+  </div>
+  <nav>
+    <div class="nav-links">
+      <a href="#services">Services</a>
+      <a href="#approche">Approche</a>
+      <a href="#portfolio">Portfolio</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </nav>
+  <a href="#contact" class="cta-btn hoverable magnetic">Démarrer un projet</a>
+</header>
+
+<section class="hero">
+  <canvas id="network-canvas"></canvas>
+  <div class="wrap hero-content">
+    <div class="eyebrow">AGENCE WEB DESIGN & CRÉATION DE SITES</div>
+    <h1 id="hero-title">Là où le design<br>rencontre <span class="grad">le code.</span></h1>
+    <p class="lede">Unite Nine conçoit des sites web qui allient esthétique et performance — pensés pour marquer autant que pour convertir.</p>
+    <div class="hero-actions">
+      <a href="#contact" class="btn-primary hoverable magnetic" data-cursor="Go">Démarrer un projet</a>
+      <a href="#services" class="btn-ghost hoverable magnetic">Voir nos services</a>
+    </div>
+  </div>
+  <div class="scroll-hint"><div class="line"></div>SCROLL</div>
+</section>
+
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span>Création de sites</span><span class="dot">·</span>
+    <span>Web design</span><span class="dot">·</span>
+    <span>E-commerce</span><span class="dot">·</span>
+    <span>Maintenance</span><span class="dot">·</span>
+    <span>Création de sites</span><span class="dot">·</span>
+    <span>Web design</span><span class="dot">·</span>
+    <span>E-commerce</span><span class="dot">·</span>
+    <span>Maintenance</span><span class="dot">·</span>
+  </div>
+  <div class="marquee-track reverse">
+    <span>[ WEB ]</span><span class="dot">·</span>
+    <span>[ ECO ]</span><span class="dot">·</span>
+    <span>[ UI ]</span><span class="dot">·</span>
+    <span>[ MNT ]</span><span class="dot">·</span>
+    <span>Suisse</span><span class="dot">·</span>
+    <span>Sur-mesure</span><span class="dot">·</span>
+    <span>[ WEB ]</span><span class="dot">·</span>
+    <span>[ ECO ]</span><span class="dot">·</span>
+    <span>[ UI ]</span><span class="dot">·</span>
+    <span>[ MNT ]</span><span class="dot">·</span>
+    <span>Suisse</span><span class="dot">·</span>
+    <span>Sur-mesure</span><span class="dot">·</span>
+  </div>
+</div>
+
+<section class="services" id="services">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">CE QUE NOUS FAISONS</div>
+      <h2>Un site web, de A à Z</h2>
+      <p>De la première idée à la mise en ligne, on s'occupe de chaque étape pour vous livrer un site qui vous ressemble.</p>
+    </div>
+    <div class="service-grid">
+      <div class="service-card reveal hoverable">
+        <div class="service-icon"><svg viewBox="0 0 24 24"><path d="M3 5h18M3 5v14a2 2 0 002 2h14a2 2 0 002-2V5M8 9h8M8 13h5"/></svg></div>
+        <span class="service-code">[ WEB ]</span>
+        <h3>Sites vitrine</h3>
+        <p>Des sites élégants et rapides qui présentent votre activité avec clarté, pensés pour donner confiance dès la première visite.</p>
+      </div>
+      <div class="service-card reveal hoverable">
+        <div class="service-icon"><svg viewBox="0 0 24 24"><path d="M3 6h18l-2 9H5L3 6zM3 6L2 3M8 21a1 1 0 100-2 1 1 0 000 2zM17 21a1 1 0 100-2 1 1 0 000 2z"/></svg></div>
+        <span class="service-code">[ ECO ]</span>
+        <h3>E-commerce</h3>
+        <p>Des boutiques en ligne pensées pour la conversion — du catalogue au paiement, une expérience d'achat fluide et rassurante.</p>
+      </div>
+      <div class="service-card reveal hoverable">
+        <div class="service-icon"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3V3zM3 9h18M9 21V9"/></svg></div>
+        <span class="service-code">[ UI ]</span>
+        <h3>Web design & UI</h3>
+        <p>Une identité visuelle forte et une interface intuitive, pour une expérience mémorable qui reflète votre marque.</p>
+      </div>
+      <div class="service-card reveal hoverable">
+        <div class="service-icon"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/><circle cx="12" cy="12" r="4"/></svg></div>
+        <span class="service-code">[ MNT ]</span>
+        <h3>Maintenance & support</h3>
+        <p>Mises à jour, sécurité et évolutions — pour que votre site reste rapide, fiable et à jour dans le temps.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="seam reveal">
+  <div class="seam-half left"></div>
+  <div class="seam-core">UNITE</div>
+  <div class="seam-half right"></div>
+</div>
+
+<section class="portfolio" id="portfolio">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">PORTFOLIO</div>
+      <h2>Nos prochains projets</h2>
+      <p>Notre portfolio est en cours de construction. Voici le type de projets sur lesquels nous travaillons actuellement.</p>
+    </div>
+    <div class="port-drag-hint"><span class="arrow">←</span> Faites glisser <span class="arrow">→</span></div>
+    <div class="port-grid" id="port-grid">
+      <div class="port-card reveal hoverable" data-cursor="Voir">
+        <div class="port-mock">
+          <div class="bar"><span></span><span></span><span></span></div>
+          <div class="shape" style="width:120px;height:70px;top:40px;left:20px;"></div>
+          <div class="shape" style="width:60px;height:60px;top:90px;left:160px;border-radius:50%;opacity:.35;"></div>
+        </div>
+        <div class="port-body">
+          <span class="port-tag">Bientôt disponible</span>
+          <h3>Site vitrine</h3>
+          <p>Une présence en ligne claire et impactante pour un indépendant ou une PME.</p>
+        </div>
+      </div>
+      <div class="port-card reveal hoverable" data-cursor="Voir">
+        <div class="port-mock">
+          <div class="bar"><span></span><span></span><span></span></div>
+          <div class="shape" style="width:90px;height:90px;top:50px;left:30px;border-radius:12px;"></div>
+          <div class="shape" style="width:70px;height:40px;top:60px;left:150px;opacity:.35;"></div>
+        </div>
+        <div class="port-body">
+          <span class="port-tag">Bientôt disponible</span>
+          <h3>E-commerce</h3>
+          <p>Une boutique en ligne complète, du catalogue produit au tunnel d'achat.</p>
+        </div>
+      </div>
+      <div class="port-card reveal hoverable" data-cursor="Voir">
+        <div class="port-mock">
+          <div class="bar"><span></span><span></span><span></span></div>
+          <div class="shape" style="width:150px;height:50px;top:70px;left:20px;"></div>
+          <div class="shape" style="width:40px;height:40px;top:30px;left:200px;border-radius:50%;opacity:.35;"></div>
+        </div>
+        <div class="port-body">
+          <span class="port-tag">Bientôt disponible</span>
+          <h3>Application web</h3>
+          <p>Une interface web sur-mesure pour un outil ou un service en ligne.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="approach" id="approche">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">NOTRE APPROCHE</div>
+      <h2>Une méthode, de l'idée à la mise en ligne</h2>
+      <p>Un process clair en quatre étapes, pensé pour qu'on avance ensemble sans surprise.</p>
+    </div>
+    <div class="approach-grid">
+      <div class="approach-step reveal">
+        <div class="approach-num">Phase 01</div>
+        <h3>Découverte</h3>
+        <p>Échange sur votre activité, vos objectifs et votre public, pour cadrer le projet dès le départ.</p>
+      </div>
+      <div class="approach-step reveal">
+        <div class="approach-num">Phase 02</div>
+        <h3>Design</h3>
+        <p>Maquettes et direction visuelle, validées avec vous avant tout développement.</p>
+      </div>
+      <div class="approach-step reveal">
+        <div class="approach-num">Phase 03</div>
+        <h3>Développement</h3>
+        <p>Intégration et développement du site, en cycles courts avec des points de suivi réguliers.</p>
+      </div>
+      <div class="approach-step reveal">
+        <div class="approach-num">Phase 04</div>
+        <h3>Mise en ligne & suivi</h3>
+        <p>Lancement, tests, puis accompagnement pour les premiers ajustements.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="why">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">POURQUOI UNITE NINE</div>
+      <h2>Ce qui change, concrètement</h2>
+    </div>
+    <div class="why-grid">
+      <div class="why-card reveal">
+        <h3>Un interlocuteur unique</h3>
+        <p>Du design au code, une seule équipe qui connaît votre projet de A à Z — pas de va-et-vient entre prestataires.</p>
+      </div>
+      <div class="why-card reveal">
+        <h3>Du sur-mesure, pas du template</h3>
+        <p>Chaque site est pensé pour votre activité et vos contraintes réelles, jamais recopié d'une maquette générique.</p>
+      </div>
+      <div class="why-card reveal">
+        <h3>Basés en Suisse</h3>
+        <p>Rigueur, réactivité et disponibilité, avec une équipe joignable dans votre fuseau horaire.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="seam reveal">
+  <div class="seam-half left"></div>
+  <div class="seam-core">NINE</div>
+  <div class="seam-half right"></div>
+</div>
+
+<section class="contact" id="contact">
+  <div class="wrap">
+    <div class="contact-inner reveal">
+      <div class="contact-left">
+        <div class="eyebrow">CONTACT</div>
+        <h2>Un projet en tête ?</h2>
+        <p>Parlez-nous de votre idée — on revient vers vous rapidement pour en discuter.</p>
+        <a class="email-link hoverable magnetic" data-cursor="Écrire" href="mailto:unite9it@gmail.com">unite9it@gmail.com →</a>
+      </div>
+      <form class="contact-form" id="contact-form">
+        <div class="field">
+          <label>NOM</label>
+          <input type="text" id="f-name" placeholder="Votre nom" required>
+        </div>
+        <div class="field">
+          <label>EMAIL</label>
+          <input type="email" id="f-email" placeholder="votre@email.com" required>
+        </div>
+        <div class="field">
+          <label>MESSAGE</label>
+          <textarea id="f-message" placeholder="Parlez-nous de votre projet..." required></textarea>
+        </div>
+        <button type="submit" class="submit-btn hoverable magnetic" data-cursor="Envoyer">Envoyer le message</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap" style="display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:16px;">
+    <div class="f-left">
+      <img src="logo.png" alt="Unite Nine">
+      <p>Web Design & Website Creation</p>
+    </div>
+    <p>© 2026 Unite Nine. Tous droits réservés.</p>
+  </div>
+</footer>
+
+<script>
+  // ---- LOADER (curtain reveal) ----
+  document.body.classList.add('loading');
+  const loader = document.getElementById('loader');
+  window.addEventListener('load', ()=>{
+    setTimeout(()=> loader.classList.add('meet'), 50);
+    setTimeout(()=> loader.classList.add('part'), 950);
+    setTimeout(()=>{
+      loader.classList.add('hide');
+      document.body.classList.remove('loading');
+      runScramble();
+    }, 1650);
+  });
+
+  // ---- Custom cursor with contextual label ----
+  const dot = document.getElementById('cursor-dot');
+  const ring = document.getElementById('cursor-ring');
+  const cursorLabel = document.getElementById('cursor-label');
+  let mx=0,my=0,rx=0,ry=0;
+  window.addEventListener('mousemove', e=>{
+    mx=e.clientX; my=e.clientY;
+    dot.style.left=mx+'px'; dot.style.top=my+'px';
+  });
+  function loop(){
+    rx += (mx-rx)*0.18; ry += (my-ry)*0.18;
+    ring.style.left=rx+'px'; ring.style.top=ry+'px';
+    requestAnimationFrame(loop);
+  }
+  loop();
+  document.querySelectorAll('.hoverable').forEach(el=>{
+    el.addEventListener('mouseenter', ()=>{
+      ring.classList.add('hover');
+      const label = el.getAttribute('data-cursor');
+      if(label){ cursorLabel.textContent = label; ring.classList.add('has-label'); }
+    });
+    el.addEventListener('mouseleave', ()=>{
+      ring.classList.remove('hover'); ring.classList.remove('has-label'); cursorLabel.textContent='';
+    });
+  });
+
+  // ---- Magnetic buttons ----
+  document.querySelectorAll('.magnetic').forEach(el=>{
+    el.addEventListener('mousemove', e=>{
+      const r = el.getBoundingClientRect();
+      const x = e.clientX - r.left - r.width/2;
+      const y = e.clientY - r.top - r.height/2;
+      el.style.transform = `translate(${x*0.28}px, ${y*0.35}px)`;
+    });
+    el.addEventListener('mouseleave', ()=>{ el.style.transform = 'translate(0,0)'; });
+  });
+
+  // ---- Hero headline scramble/decode ----
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ01#/*+<>';
+  function scrambleNode(node, duration=650){
+    const original = node.textContent;
+    const len = original.length;
+    let frame = 0;
+    const totalFrames = Math.round(duration/30);
+    const interval = setInterval(()=>{
+      frame++;
+      let out = '';
+      const reveal = Math.floor((frame/totalFrames)*len);
+      for(let i=0;i<len;i++){
+        if(i < reveal || original[i] === ' ') out += original[i];
+        else out += CHARS[Math.floor(Math.random()*CHARS.length)];
+      }
+      node.textContent = out;
+      if(frame >= totalFrames){ node.textContent = original; clearInterval(interval); }
+    }, 30);
+  }
+  function runScramble(){
+    const title = document.getElementById('hero-title');
+    if(!title) return;
+    // scramble each direct text-bearing leaf independently, staggered
+    const walker = [];
+    title.childNodes.forEach(n=>{
+      if(n.nodeType===3 && n.textContent.trim()) walker.push(n.parentNode===title?n:n);
+    });
+    // Simpler: wrap whole line1 (before <br>) and the grad span separately
+    const gradSpan = title.querySelector('.grad');
+    // Build a temp approach: scramble text nodes directly
+    const nodes = [];
+    function collect(node){
+      node.childNodes.forEach(c=>{
+        if(c.nodeType===3 && c.textContent.trim()) nodes.push(c);
+        else if(c.nodeType===1) collect(c);
+      });
+    }
+    collect(title);
+    nodes.forEach((n,i)=>{
+      const span = document.createElement('span');
+      span.textContent = n.textContent;
+      n.parentNode.replaceChild(span, n);
+      setTimeout(()=> scrambleNode(span, 600), i*120);
+    });
+  }
+
+  // ---- Scroll reveal (also drives seam dividers) ----
+  const revealEls = document.querySelectorAll('.reveal, .seam');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(en=>{ if(en.isIntersecting) en.target.classList.add('in'); });
+  }, {threshold:0.15});
+  revealEls.forEach(el=>io.observe(el));
+
+  // ---- Card spotlight + tilt ----
+  document.querySelectorAll('.service-card').forEach(card=>{
+    card.addEventListener('mousemove', e=>{
+      const r = card.getBoundingClientRect();
+      const x = e.clientX-r.left, y = e.clientY-r.top;
+      card.style.setProperty('--mx', x+'px');
+      card.style.setProperty('--my', y+'px');
+      const rx = ((y/r.height)-0.5) * -6;
+      const ry = ((x/r.width)-0.5) * 6;
+      card.style.transform = `perspective(700px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+    });
+    card.addEventListener('mouseleave', ()=>{ card.style.transform=''; });
+  });
+
+  // ---- Portfolio drag-to-scroll carousel ----
+  const portGrid = document.getElementById('port-grid');
+  if(portGrid){
+    let isDown=false, startX=0, startScroll=0;
+    portGrid.addEventListener('mousedown', e=>{
+      isDown=true; portGrid.classList.add('dragging');
+      startX = e.pageX; startScroll = portGrid.scrollLeft;
+    });
+    window.addEventListener('mouseup', ()=>{ isDown=false; portGrid.classList.remove('dragging'); });
+    window.addEventListener('mousemove', e=>{
+      if(!isDown) return;
+      portGrid.scrollLeft = startScroll - (e.pageX - startX);
+    });
+    portGrid.addEventListener('touchstart', e=>{
+      startX = e.touches[0].pageX; startScroll = portGrid.scrollLeft;
+    });
+    portGrid.addEventListener('touchmove', e=>{
+      portGrid.scrollLeft = startScroll - (e.touches[0].pageX - startX);
+    });
+  }
+
+
+  // Network canvas (hero signature)
+  const canvas = document.getElementById('network-canvas');
+  const ctx = canvas.getContext('2d');
+  let W,H,nodes=[];
+  const NODE_COUNT = 46;
+  const mouse = {x:-9999,y:-9999};
+
+  function resize(){
+    W = canvas.width = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+  }
+  window.addEventListener('resize', resize);
+
+  function initNodes(){
+    nodes = [];
+    for(let i=0;i<NODE_COUNT;i++){
+      nodes.push({
+        x: Math.random()*W, y: Math.random()*H,
+        vx: (Math.random()-0.5)*0.25, vy:(Math.random()-0.5)*0.25,
+        r: Math.random()*1.6+0.6
+      });
+    }
+  }
+
+  document.querySelector('.hero').addEventListener('mousemove', e=>{
+    const r = canvas.getBoundingClientRect();
+    mouse.x = e.clientX-r.left; mouse.y = e.clientY-r.top;
+  });
+  document.querySelector('.hero').addEventListener('mouseleave', ()=>{
+    mouse.x=-9999; mouse.y=-9999;
+  });
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    for(let i=0;i<nodes.length;i++){
+      const n = nodes[i];
+      n.x += n.vx; n.y += n.vy;
+      if(n.x<0||n.x>W) n.vx*=-1;
+      if(n.y<0||n.y>H) n.vy*=-1;
+
+      const dx = mouse.x-n.x, dy = mouse.y-n.y;
+      const dist = Math.sqrt(dx*dx+dy*dy);
+      if(dist < 160){
+        n.x -= dx*0.002; n.y -= dy*0.002;
+      }
+    }
+    for(let i=0;i<nodes.length;i++){
+      for(let j=i+1;j<nodes.length;j++){
+        const a=nodes[i], b=nodes[j];
+        const dx=a.x-b.x, dy=a.y-b.y;
+        const d = Math.sqrt(dx*dx+dy*dy);
+        if(d < 130){
+          const op = (1-d/130)*0.35;
+          ctx.strokeStyle = `rgba(140,110,255,${op})`;
+          ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+        }
+      }
+    }
+    for(const n of nodes){
+      ctx.beginPath();
+      ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
+      ctx.fillStyle = 'rgba(200,190,255,0.8)';
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+
+  resize(); initNodes(); draw();
+
+  // Contact form -> mailto
+  document.getElementById('contact-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    const name = document.getElementById('f-name').value;
+    const email = document.getElementById('f-email').value;
+    const message = document.getElementById('f-message').value;
+    const subject = encodeURIComponent(`Nouveau projet — ${name}`);
+    const body = encodeURIComponent(`${message}\n\n—\n${name}\n${email}`);
+    window.location.href = `mailto:unite9it@gmail.com?subject=${subject}&body=${body}`;
+  });
+</script>
+
+</body>
+</html>
